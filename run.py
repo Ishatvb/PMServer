@@ -1,46 +1,54 @@
 import subprocess
-import time
+from dotenv import load_dotenv
+import os
+import signal
+import platform
 
-# Function to start Node.js server
-def start_node_server():
-    print("Starting Node.js server...")
-    node_process = subprocess.Popen(["node", "app.js"])
-    return node_process
+load_dotenv()
 
-# Function to start Ngrok with a custom domain
-def start_ngrok():
-    print("Starting ngrok with custom domain...")
-    ngrok_command = [
-        "ngrok", "http", 
-        "--domain=dogfish-wired-sailfish.ngrok-free.app", "5050"
-    ]
-    
+def run_ngrok():
+    ngrok_domain = os.getenv("NGROK_DOMAIN")
+    SERVER_PORT = os.getenv("SERVER_PORT")
+    if ngrok_domain is None:
+        raise ValueError("NGROK_DOMAIN environment variable is not set.")
+    print(f"NGROK_DOMAIN: {ngrok_domain}")
+    ngrok_command = ["ngrok", "http", f"--domain={ngrok_domain}", SERVER_PORT]
     ngrok_process = subprocess.Popen(ngrok_command)
-    
-    print("Ngrok started with custom domain: dogfish-wired-sailfish.ngrok-free.app")
     return ngrok_process
 
-# Main function
+def run_node_app():
+    node_command = ["node", "app.js"]
+    node_process = subprocess.Popen(node_command)
+    return node_process
+
+def terminate_process(process):
+    if process.poll() is None:  # Check if the process is still running
+        process.terminate()
+        try:
+            process.wait(timeout=2)  # Wait for the process to terminate
+        except subprocess.TimeoutExpired:
+            process.kill()  # Force kill if it doesn't terminate in time
+
 if __name__ == "__main__":
-    try:
-        # Start the Node.js server
-        node_server = start_node_server()
-        time.sleep(2)  # Allow some time for the Node.js server to start
+    ngrok_process = run_ngrok()
+    node_process = run_node_app()
 
-        # Start Ngrok with the custom domain
-        ngrok_process = start_ngrok()
-
-        # Keep the script running until interrupted
-        print("Press Ctrl+C to stop the server and Ngrok...")
-        while True:
-            time.sleep(1)
-
-    except KeyboardInterrupt:
-        print("\nShutting down...")
-
-    finally:
-        # Terminate both processes when the script ends
-        print("Terminating Node.js server and Ngrok process...")
-        node_server.terminate()
-        ngrok_process.terminate()
+    def signal_handler(sig, frame):
+        print("Terminating processes...")
+        terminate_process(ngrok_process)
+        terminate_process(node_process)
         print("Processes terminated.")
+        exit(0)
+
+    signal.signal(signal.SIGINT, signal_handler)  # Handle Ctrl+C
+    signal.signal(signal.SIGTERM, signal_handler)  # Handle termination signals
+
+    # Windows-specific: Handle console close event
+    if platform.system() == "Windows":
+        signal.signal(signal.SIGBREAK, signal_handler)  # Handle Ctrl+Break
+
+    try:
+        ngrok_process.wait()
+        node_process.wait()
+    except KeyboardInterrupt:
+        signal_handler(signal.SIGINT, None)

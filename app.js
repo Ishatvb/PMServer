@@ -1,17 +1,17 @@
 const express= require("express");
-const app=express();
+
 const mongoose=require("mongoose");
+require('dotenv').config();
+
+const app=express();
 app.use(express.json());
-import auth_router from "./controllers/authentication";
-// const bcrypt = require("bcryptjs");
-// const jwt=require('jsonwebtoken');
 
-const mongoUrl ="mongodb+srv://beoharishatv7470:medicinereminderadmin@cluster0.rlinx.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+const auth_router = require("./controllers/Authentication");
 
-// const JWT_SECRET = "hvdvay6ert72839289()aiy8t87qt72393293883uhefiuh78ttq3ifi78272jdsds039[]]pou89ywe";
+const MONGO_URL = process.env.MONGO_URL;
 
 mongoose
-.connect(mongoUrl)
+.connect(MONGO_URL)
 .then(()=>{
     console.log("Database connected");
 })
@@ -27,7 +27,7 @@ app.get("/",(req, res)=>{
 
 app.use("/auth", auth_router);
 
-app.listen(5050,()=>{
+app.listen(process.env.SERVER_PORT,()=>{
     console.log("Node js server started.");
 });
 

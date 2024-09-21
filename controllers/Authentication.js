@@ -1,13 +1,20 @@
-import express from "express"
+const express = require("express");
 const router = express.Router();
+const mongoose = require("mongoose");
+require('dotenv').config();
 
 const bcrypt = require("bcryptjs");
 const jwt=require('jsonwebtoken');
 
-const JWT_SECRET = "hvdvay6ert72839289()aiy8t87qt72393293883uhefiuh78ttq3ifi78272jdsds039[]]pou89ywe";
+require("../UserDetails");
 
+const User = mongoose.model("UserInfo");
+
+const JWT_SECRET = process.env.JWT_SECRET
 router.post("/register",async(req, res) => {
     const {name, mobile, age, password}=req.body;
+
+    console.log(name, mobile, age, password);
 
     const oldUser=await User.findOne({mobile:mobile});
 
@@ -40,12 +47,15 @@ router.post("/login-user", async(req, res)=>{
     if(await bcrypt.compare(password, oldUser.password)){
         const token=jwt.sign({mobile:oldUser.mobile}, JWT_SECRET);
     
-    if(res.status(201)){
-        return res.send({status: "ok", data: token});
+        if(res.status(201)){
+            return res.send({status: "ok", data: token});
+        }
+        else{
+            return res.send({error: "error"});
+        }
     }
     else{
-        return res.send({error: "error"});
-    }
+        return res.send({data: "Password is incorrect"});
     }
 });
 
@@ -64,4 +74,4 @@ router.post("/userdata", async (req, res) => {
     }
   });
 
-  export default auth_router;
+module.exports = router;
