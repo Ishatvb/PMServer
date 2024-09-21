@@ -5,7 +5,6 @@ const app = express();
 app.use(express.json());
 
 const auth_router = require("./controllers/Authentication");
-require('./db_Access/DBSetup');
 
 app.get("/", (req, res) => {
   res.send({ status: "Started" });
