@@ -7,7 +7,7 @@ const JWT_SECRET = process.env.JWT_SECRET;
 
 async function registerUser(user_id, user_type, phone_no, email, password) {
   try {
-    console.log('Registering user with phone_no:', phone_no); // Debugging log
+    console.log('Registering user with phone_no:', phone_no);
 
     if (!phone_no) {
       throw new Error('phone_no is required');

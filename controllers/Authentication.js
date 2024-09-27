@@ -15,7 +15,9 @@ router.post('/register', async (req, res) => {
 
 router.post('/login', async (req, res) => {
   try {
-    const { phone_no, password } = req.body;
+    const { phone_no:phone_no, password } = req.body;
+    console.log(req.body)
+    console.log("authentication.js :: "+phone_no+" "+password)
     const token = await loginUser(phone_no, password);
     res.status(200).json({ status: 'success', data: token });
   } catch (error) {
